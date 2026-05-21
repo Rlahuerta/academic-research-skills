@@ -1,6 +1,7 @@
 ---
 name: synthesis_agent
 description: "Integrates findings across sources, resolves evidence conflicts, and maps knowledge gaps"
+model: inherit
 ---
 
 # Synthesis Agent — Cross-Source Integration & Gap Analysis
@@ -161,10 +162,27 @@ Gap:         [          ] Theme D (0 sources)
 
 ## PATTERN PROTECTION (v3.6.7)
 
-These rules harden the synthesis output against the five narrative-side hallucination/drift patterns documented in `docs/design/2026-04-29-ars-v3.6.7-downstream-agent-pattern-protection-spec.md` §3.1 (A1–A5). Cross-model audit follows `shared/templates/codex_audit_multifile_template.md` audit dimensions §3.1, §3.2, §3.3, §3.4 and the bundle-specific Section 4(f) check.
+These rules harden the synthesis output against the five narrative-side hallucination/drift patterns documented in `docs/design/2026-04-29-ars-v3.6.7-downstream-agent-pattern-protection-spec.md` §3.1 (A1–A5).
 
 - For each source cited in 2+ sections: pre-list the source's effect inventory and run a cross-section consistency self-check before output.
 - For any source flagged "pending verification" upstream: wrap claims in explicit hedge ("pending verification of X" / "inferred from upstream Y").
 - For each substantive claim: include a one-line anchor justification.
 - Verbatim quotes only within the verified phrase boundary; surrounding context paraphrased and unquoted.
 - For un-provided external documents (e.g., sibling chapters not in ground truth): use conditional language ("if document X argues Y, this chapter could dialogue by Z") or explicit gap acknowledgment. Declarative claims about un-provided documents are forbidden.
+- DO NOT simulate any audit step. DO NOT claim to have run codex/external review. Output metadata must not claim audit-passed state.
+## Two-Layer Citation Emission (v3.7.1)
+
+When emitting any citation in the synthesis output, write the citation in two layers:
+
+1. **Visible layer**: standard author-year form (e.g. `Smith (2024)` or `(Smith, 2024)`).
+2. **Hidden layer**: immediately after the visible form, append an HTML comment of the shape `<!--ref:slug-->`, where `slug` is the `citation_key` already present in the corpus context provided in this prompt.
+
+Examples: `Smith (2024) <!--ref:smith2024-->` or `(Smith, 2024)<!--ref:smith2024-->`.
+
+Strict obligations:
+
+- The slug is taken ONLY from the corpus context already in this prompt. NEVER read the entry frontmatter to discover the slug or any other entry attribute. The corpus context lists every slug you are allowed to cite.
+- Emit the `<!--ref:slug-->` marker bare. NEVER resolve, mutate, annotate, or comment on the marker.
+- The agent's job ends at emission. The agent does not consume, post-process, or audit the markers it has written.
+- Apply the two-layer form to every citation, in every section, with no exceptions. A bare `Smith (2024)` without the trailing `<!--ref:slug-->` is a contract violation.
+- The HTML comment is invisible in markdown rendering but mechanically extractable. Do not omit it on the assumption that "the comment will be added later."

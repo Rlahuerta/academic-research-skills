@@ -88,4 +88,4 @@ Activate `plan` mode (Socratic chapter-by-chapter guidance) when the user's **in
 **Default rule**: When intent is ambiguous between `plan` and `full`, **prefer `plan`** — it is safer to guide a user who needs help than to produce a paper they can't use. The user can always switch to `full` later.
 
 **Example triggers** (illustrative, not exhaustive):
-"guide my paper", "help me plan my paper", "I don't know how to start", 「引導我寫論文」「幫我規劃論文」, or equivalent in any language
+"guide my paper", "help me plan my paper", "I don't know how to start", or equivalent in any language

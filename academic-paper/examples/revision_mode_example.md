@@ -142,16 +142,16 @@ Huang, C.-W. (2021). Implications of micro-credit systems for technical and voca
 
 **Correction 3: In-text citation / reference list mismatch**
 
-Found that the in-text citation on page 23 reads "Chen et al.（2023）," but the reference list entry is "Chen, Y.-L., & Wang, S.-T.（2023）," which has only two authors and should not use "et al."
+Found that the in-text citation on page 23 reads "Chen et al.(2023)," but the reference list entry is "Chen, Y.-L., & Wang, S.-T.(2023)," which has only two authors and should not use "et al."
 
 Before correction:
 ```
-Chen et al.（2023）found that micro-credential certification helps...
+Chen et al.(2023)found that micro-credential certification helps...
 ```
 
 After correction:
 ```
-Chen and Wang（2023）found that micro-credential certification helps...
+Chen and Wang(2023)found that micro-credential certification helps...
 ```
 
 **Correction 4: Add English translated titles for Chinese references**

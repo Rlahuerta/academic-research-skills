@@ -160,11 +160,6 @@ User Input
 "Guide my research on educational technology"
 "Help me think through my thesis direction"
 "Help me think through my research topic"
-「引導我的研究：高教品保」
-「幫我釐清我的研究方向」
-「幫我想想，我對少子化議題有興趣但不確定要研究什麼」
-「我有個模糊的想法，想找研究題目」
-「帶我做研究」
 ```
 
 ---
@@ -197,10 +192,10 @@ User Input
 |-----------|------------------|---------|------|
 | "Help me do a complete literature review" | Complete report (with analysis and conclusions) | `full`, not `lit-review` | lit-review only produces bibliography and synthesis, no original analysis |
 | "Quickly check the situation with X" | Fact-checking | `fact-check`, not `quick` | If only needing to verify specific facts, fact-check is more precise |
-| "I want to research X" / 「我想研究X」(but can't articulate what they want to know) | Research thinking clarification | `socratic`, not `full` | full mode's Phase 1 also offers interaction, but socratic goes deeper |
+| "I want to research X" (but can't articulate what they want to know) | Research thinking clarification | `socratic`, not `full` | full mode's Phase 1 also offers interaction, but socratic goes deeper |
 | "Help me fix this paper" | Paper revision guidance | `review`, not `full` | Already has text, needs review not research from scratch |
 | "I need APA-formatted references" | Reference formatting | `lit-review`, not `full` | If only a reference list and formatting is needed, no complete research required |
-| "Help me think of a research topic" / 「幫我想研究題目」 | Research direction exploration | `socratic` | Best suited for users without a clear direction |
+| "Help me think of a research topic" | Research direction exploration | `socratic` | Best suited for users without a clear direction |
 | "Systematic review of X" | PRISMA-compliant review | `systematic-review`, not `lit-review` | lit-review is a narrative survey; systematic-review follows PRISMA protocol with risk of bias and optional meta-analysis |
 | "I need a meta-analysis" | Quantitative evidence synthesis | `systematic-review` | Meta-analysis is a component of systematic review, not a standalone mode |
 | "Literature review for my thesis chapter" | Narrative literature review | `lit-review`, not `systematic-review` | Thesis lit review chapters are typically narrative, not PRISMA-compliant |

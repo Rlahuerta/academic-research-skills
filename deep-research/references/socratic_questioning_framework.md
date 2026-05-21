@@ -205,9 +205,9 @@ The SCR (State-Challenge-Reflect) overlay works ON TOP of existing Socratic ques
 
 | SCR Phase | Socratic Function | Timing | Purpose |
 |-----------|------------------|--------|---------|
-| **State** (表態) | Clarifying + Probing | Before presenting data/evidence | Collect user's prediction or self-assessment |
-| **Challenge** (挑戰) | Structuring + Challenging | After commitment collected | Present information that tests the commitment |
-| **Reflect** (反思) | Probing + Structuring | After divergence revealed | Guide user to self-explain the gap |
+| **State** | Clarifying + Probing | Before presenting data/evidence | Collect user's prediction or self-assessment |
+| **Challenge** | Structuring + Challenging | After commitment collected | Present information that tests the commitment |
+| **Reflect** | Probing + Structuring | After divergence revealed | Guide user to self-explain the gap |
 
 ### Design Constraints
 1. The user never sees the words "SCR", "commitment gate", or "divergence reveal"
