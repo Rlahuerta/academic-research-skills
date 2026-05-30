@@ -264,7 +264,7 @@ Three GitHub Actions workflows live in `.github/workflows/`:
 
 | Variable | Purpose | Default |
 |----------|---------|---------|
-| `ARS_PASSPORT_RESET` | Opt-in: promote every FULL checkpoint to a context-reset boundary (v3.6.3) | OFF |
+| `ARS_PASSPORT_RESET` | Opt-in: promote every FULL checkpoint to a context-reset boundary (v3.6.3). See `passport_as_reset_boundary` protocol in `docs/design/`. | OFF |
 | `ARS_SOCRATIC_READING_PROBE` | Opt-in: Socratic mentor asks reading-check questions when user cites a paper (v3.5.1) | OFF |
 | `ARS_CROSS_MODEL` | Enable cross-model verification via GPT or Gemini for integrity checks + DA critique (v3.0) | unset |
 | `PYTHONPATH` | Must include `.` or `scripts` depending on the test module (see commands above) | — |
