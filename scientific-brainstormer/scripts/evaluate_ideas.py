@@ -102,7 +102,12 @@ class ReActAnalyst:
         """Read a file from the skill directory, with caching."""
         if relative_path in self._file_cache:
             return self._file_cache[relative_path]
-        filepath = self.skill_dir / relative_path
+        filepath = (self.skill_dir / relative_path).resolve()
+        try:
+            if not filepath.is_relative_to(self.skill_dir.resolve()):
+                return f"[ACCESS DENIED: {relative_path}]"
+        except (ValueError, OSError):
+            return f"[ACCESS DENIED: {relative_path}]"
         if not filepath.exists():
             return f"[FILE NOT FOUND: {relative_path}]"
         content = filepath.read_text(encoding="utf-8")

@@ -78,8 +78,15 @@ class PatchConsolidator:
             print(f"[-] Guardrail 1 Failed: Invalid patch schema. Missing keys: {missing}")
             return False
 
-        # Guardrail 2: Check if targeted file actually exists
-        target_file = self.skill_dir / patch["file"]
+        # Guardrail 2: Check if targeted file actually exists and stays within skill_dir
+        target_file = (self.skill_dir / patch["file"]).resolve()
+        try:
+            if not target_file.is_relative_to(self.skill_dir.resolve()):
+                print(f"[-] Guardrail 2 Failed: Target path escapes skill directory: '{patch['file']}'")
+                return False
+        except (ValueError, OSError):
+            print(f"[-] Guardrail 2 Failed: Invalid path: '{patch['file']}'")
+            return False
         if not target_file.exists():
             print(f"[-] Guardrail 2 Failed: Target file '{patch['file']}' does not exist.")
             return False
@@ -192,7 +199,14 @@ Output your final consolidated modification in JSON format with these exact keys
                 print(f"    - {err}")
             return
 
-        target_filepath = self.skill_dir / consolidated_patch["file"]
+        target_filepath = (self.skill_dir / consolidated_patch["file"]).resolve()
+        try:
+            if not target_filepath.is_relative_to(self.skill_dir.resolve()):
+                print(f"[!] Refusing to apply patch: Target path escapes skill directory.")
+                return
+        except (ValueError, OSError):
+            print(f"[!] Refusing to apply patch: Invalid path.")
+            return
         content = target_filepath.read_text()
 
         target_section = consolidated_patch["target_section"]
