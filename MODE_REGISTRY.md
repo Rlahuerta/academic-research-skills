@@ -1,12 +1,18 @@
 # Mode Registry
 
-Single source of truth for all modes across the ARS suite. **25 modes** across 4 skills.
+Single source of truth for all modes across the ARS suite. **27 modes** across 6 skills.
 
 When adding or modifying modes, update this file first — SKILL.md files and CLAUDE.md should reference this registry.
 
 Last updated: v3.6.8 (2026-05-03)
 
 ---
+
+## scientific-brainstormer (1 mode)
+
+| Mode | Spectrum | Output | Oversight | Triggers |
+|------|----------|--------|-----------|----------|
+| (brainstorm) | Originality | Structured research proposal with falsifiable hypothesis, control groups, and statistical plan | High | "brainstorm hypotheses", "generate research ideas", "scientific ideation", "novel research direction", "design an experiment" |
 
 ## deep-research (7 modes)
 
@@ -29,11 +35,17 @@ Last updated: v3.6.8 (2026-05-03)
 | `outline-only` | Balanced | Detailed outline + evidence map | High | "paper outline", "just need an outline" |
 | `revision` | Fidelity | Revised draft + point-by-point R&R responses | High | "revise paper", "incorporate reviewer feedback" |
 | `revision-coach` | Balanced | Revision Roadmap + Response Letter Skeleton | Medium | "parse reviews", "I got reviewer comments" |
-| `abstract-only` | Fidelity | Bilingual abstract (zh-TW + EN) + keywords | Medium | "write abstract" |
+| `abstract-only` | Fidelity | Structured abstract (6 components) + keywords | Medium | "write abstract" |
 | `lit-review` | Fidelity | Annotated bibliography in paper format | Medium | "literature review paper", "write a lit review" |
 | `format-convert` | Fidelity | Formatted document (LaTeX/DOCX-via-Pandoc/PDF/MD) | Low | "convert to LaTeX", "convert citations to [format]" |
 | `citation-check` | Fidelity | Citation error report | Low | "check citations", "verify references" |
 | `disclosure` | Fidelity | Venue-specific AI-usage disclosure statement | Low | "AI disclosure for [venue]", "generate AI usage statement" |
+
+## academic-abstract (1 mode)
+
+| Mode | Spectrum | Output | Oversight | Triggers |
+|------|----------|--------|-----------|----------|
+| (abstract-only) | Fidelity | Structured abstract (Background, Gap, Objective, Method, Key Findings, Implications) with quality gate | Medium | "write abstract", "generate abstract", "refine abstract", "paper abstract", "conference abstract" |
 
 ## academic-paper-reviewer (6 modes)
 
@@ -59,10 +71,10 @@ Last updated: v3.6.8 (2026-05-03)
 
 | Metric | Count |
 |--------|-------|
-| Total modes | 25 |
-| Fidelity | 14 (56%) |
-| Balanced | 7 (28%) |
-| Originality | 4 (16%) |
+| Total modes | 27 |
+| Fidelity | 15 (56%) |
+| Balanced | 7 (26%) |
+| Originality | 5 (19%) |
 
 ### Oversight levels
 
