@@ -119,3 +119,4 @@ jobs:
           branch: auto/skill-evolution
           branch-suffix: timestamp
           delete-branch: true
+          draft: true
