@@ -1,9 +1,9 @@
 ---
 name: scientific-brainstormer
-description: "Scientific hypothesis brainstorming and ideation skill. 4-phase workflow (contextual divergence → hypothesis synthesis → critical pruning → operationalization) with self-evolution via Trace2Skill trajectory analysis. Triggers: brainstorm hypotheses, generate research ideas, scientific ideation, design experiment, novel research direction."
+description: "Scientific hypothesis brainstorming and ideation skill. 4-phase workflow (contextual divergence → hypothesis synthesis → critical pruning → operationalization) with self-evolution via Trace2Skill trajectory analysis. v1.1 adds Lipton loveliness scoring to Phase 3 (R1.2), inference-mode labeling to Phase 2 (R1.4), and Boden-type diversity check (R1.8). Triggers: brainstorm hypotheses, generate research ideas, scientific ideation, design experiment, novel research direction."
 metadata:
-  version: "1.0.0"
-  last_updated: "2026-05-29"
+  version: "1.1.0"
+  last_updated: "2026-06-01"
   status: active
   data_access_level: raw
   task_type: open-ended
@@ -48,10 +48,13 @@ To brainstorm and design a scientific proposal, execute the following four phase
 ### Phase 2: Hypothesis Synthesis
 * **Action:** Draft 3–5 candidate hypotheses using `templates/HYPOTHESIS.md`.
 * **Instruction:** Force each hypothesis to be physically falsifiable, logically sound, and structurally distinct.
+* **R1.4 — Inference mode label:** Every candidate must declare its inference mode (Section 6 of the template: one of `abduction`, `induction`, `analogy`). A single-mode candidate set is a Phase 2 failure — the brainstormer must generate at least 2 distinct modes across the candidates, otherwise the *under-explored conceptual space* trap (failure_modes.md §4) has already been triggered.
+* **R1.8 — Boden-type diversity:** The candidate set should span the three Boden creativity types — *combinational* (≈ analogy), *exploratory* (≈ induction), *transformational* (≈ abduction). A combinational-only set is the dominant LLM-ideation failure mode; the agent should deliberately attempt at least one exploratory or transformational candidate per brainstorm.
 
 ### Phase 3: Critical Convergent Pruning
 * **Action:** Subject each candidate hypothesis to rigorous counter-argumentation.
 * **Instruction:** Assume the role of a hostile peer reviewer. Attempt to invalidate the hypothesis using the common pitfalls documented in `references/failure_modes.md`. Eliminate ideas that are physically implausible, untestable, or redundant.
+* **R1.2 — Lipton loveliness scoring:** During pruning, score each surviving candidate on Lipton's four explanatory virtues (Section 5 of the template): `scope`, `mechanism`, `unification`, `simplicity` — each as W / M / S. A Loveliness score of three or four W's is **below threshold** and the candidate is pruned regardless of heuristic pass/fail. The trade-off with novelty (per IdeaBench, Guo et al. 2024) is: a candidate that scores high on novelty but low on feasibility (mechanism = W) is *flagged for revision* rather than auto-pruned. Pruning applies only to candidates below threshold on **both** novelty and feasibility.
 
 ### Phase 4: Operationalization
 * **Action:** Convert the surviving hypothesis into a structured proposal using `templates/RESEARCH_PROPOSAL.md`.

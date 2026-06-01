@@ -25,3 +25,6 @@ Prior studies show correlation between library usage and GPA. This study aims to
 ## 4. Expected Limitations & Risk Mitigation
 
 The main limitation is that students who already use the library frequently may differ systematically (e.g., higher motivation, better time management). These confounding variables are not controlled for. Additionally, the mandatory intervention does not establish a causal mechanism — it only shows whether forced library time affects GPA.
+
+Loveliness: (scope=M, mechanism=W, unification=M, simplicity=M)
+Inference Mode: induction

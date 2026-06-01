@@ -283,6 +283,14 @@ Start by reading SKILL.md and references/failure_modes.md to understand the expe
 # ---------------------------------------------------------------------------
 
 class IdeaEvaluator:
+    # Allowed inference-mode values (R1.4). The set is the union of the
+    # Peirce / Douven abduction vocabulary and the Boden 2004 creativity
+    # vocabulary. Either form is accepted; the heuristic accepts any case.
+    ALLOWED_INFERENCE_MODES = (
+        "abduction", "induction", "analogy",
+        "combinational", "exploratory", "transformational",
+    )
+
     def __init__(self, failure_modes_path: Path):
         self.failure_modes_path = failure_modes_path
         self.forbidden_keywords = []
@@ -301,6 +309,58 @@ class IdeaEvaluator:
         for word in heuristics:
             if word in content:
                 self.forbidden_keywords.append(word)
+
+    # ------------------------------------------------------------------
+    # R1.2 — Lipton loveliness parsing
+    # ------------------------------------------------------------------
+
+    _LOVELINESS_RE = re.compile(
+        r"loveliness\s*:\s*\(\s*"
+        r"scope\s*=\s*([WMSwms])"
+        r"\s*,\s*mechanism\s*=\s*([WMSwms])"
+        r"\s*,\s*unification\s*=\s*([WMSwms])"
+        r"\s*,\s*simplicity\s*=\s*([WMSwms])"
+        r"\s*\)",
+        re.IGNORECASE,
+    )
+
+    @classmethod
+    def parse_loveliness(cls, text: str) -> tuple[int, int, int, int] | None:
+        """Return the 4-tuple (W_count, M_count, S_count, total) for the
+        proposal, or None if no Loveliness line is present.
+
+        The total is always 4. Returns (W, M, S, 4).
+        """
+        m = cls._LOVELINESS_RE.search(text)
+        if not m:
+            return None
+        marks = [g.upper() for g in m.groups()]
+        return (
+            sum(1 for v in marks if v == "W"),
+            sum(1 for v in marks if v == "M"),
+            sum(1 for v in marks if v == "S"),
+            4,
+        )
+
+    # ------------------------------------------------------------------
+    # R1.4 — Inference-mode parsing
+    # ------------------------------------------------------------------
+
+    _INFERENCE_MODE_RE = re.compile(
+        r"[Ii]nference\s+[Mm]ode\s*:\s*([A-Za-z][A-Za-z\-]*)"
+    )
+
+    @classmethod
+    def parse_inference_mode(cls, text: str) -> str | None:
+        """Return the declared inference mode (case-insensitive match
+        against `ALLOWED_INFERENCE_MODES`), or None if absent."""
+        m = cls._INFERENCE_MODE_RE.search(text)
+        if not m:
+            return None
+        mode = m.group(1).strip().lower()
+        if mode in cls.ALLOWED_INFERENCE_MODES:
+            return mode
+        return mode  # return the raw value so the caller can report it
 
     def evaluate_heuristics(self, proposal_text: str) -> dict:
         """Applies fast, deterministic rule checks to the proposal."""
@@ -337,9 +397,90 @@ class IdeaEvaluator:
             if kw in proposal_lower:
                 failures.append(f"Potential violation of failure mode: '{kw}' detected.")
 
+        # R1.2 — Loveliness field present and above threshold
+        lovely = self.parse_loveliness(proposal_text)
+        if lovely is None:
+            failures.append(
+                "R1.2 Loveliness score missing — add a 'Loveliness: "
+                "(scope=X, mechanism=Y, unification=Z, simplicity=W)' line "
+                "with each X/Y/Z/W in {W, M, S}."
+            )
+        else:
+            w_count = lovely[0]
+            if w_count >= 3:
+                failures.append(
+                    f"R1.2 Loveliness below threshold ({w_count}/4 W's) — "
+                    f"the candidate should be pruned or revised."
+                )
+
+        # R1.4 — Inference-mode field present and in the allowed vocabulary
+        mode = self.parse_inference_mode(proposal_text)
+        if mode is None:
+            failures.append(
+                "R1.4 Inference mode missing — declare an 'Inference Mode: "
+                "<mode>' line with one of: "
+                f"{', '.join(self.ALLOWED_INFERENCE_MODES)}."
+            )
+        elif mode not in self.ALLOWED_INFERENCE_MODES:
+            failures.append(
+                f"R1.4 Inference mode '{mode}' is not in the allowed "
+                f"vocabulary: {', '.join(self.ALLOWED_INFERENCE_MODES)}."
+            )
+
         return {
             "passed": len(failures) == 0,
             "reasons": failures
+        }
+
+    # ------------------------------------------------------------------
+    # R1.8 — Boden-type diversity check across a candidate set
+    # ------------------------------------------------------------------
+
+    def evaluate_set_diversity(self, proposal_texts: list[str]) -> dict:
+        """R1.8 — Evaluate the diversity of a Phase 2 candidate set.
+
+        A candidate set of ≥ 2 hypotheses must cover ≥ 2 distinct
+        inference modes. A single-mode set is a Phase 2 failure (the
+        *under-explored conceptual space* trap documented in
+        `references/failure_modes.md` §4).
+
+        Single-candidate sets are not penalized — a one-candidate
+        brainstorm is not yet a "set" in the sense the diversity rule
+        is targeting.
+
+        Returns: `{"passed": bool, "reasons": list[str], "modes_seen": list[str]}`.
+        """
+        if len(proposal_texts) < 2:
+            return {"passed": True, "reasons": [], "modes_seen": []}
+
+        modes: list[str] = []
+        for text in proposal_texts:
+            mode = self.parse_inference_mode(text)
+            if mode is not None and mode in self.ALLOWED_INFERENCE_MODES:
+                modes.append(mode)
+
+        # We require diversity only over proposals that actually
+        # declared a mode. Proposals missing the field are flagged by
+        # the per-proposal heuristic already; counting them toward
+        # diversity would mask the missing-field problem.
+        unique_modes = set(modes)
+        if len(unique_modes) < 2:
+            return {
+                "passed": False,
+                "reasons": [
+                    "R1.8 Candidate-set diversity failure: "
+                    f"only {len(unique_modes)} distinct inference mode(s) "
+                    f"across {len(proposal_texts)} candidates "
+                    f"({sorted(unique_modes) or 'none declared'}). The "
+                    "under-explored conceptual space trap "
+                    "(failure_modes.md §4) requires ≥ 2 distinct modes."
+                ],
+                "modes_seen": sorted(unique_modes),
+            }
+        return {
+            "passed": True,
+            "reasons": [],
+            "modes_seen": sorted(unique_modes),
         }
 
 
@@ -385,16 +526,49 @@ def main():
     error_analyst.MODEL = args.model
     success_analyst.MODEL = args.model
 
+    # First pass: collect the per-proposal Stage 1 heuristic verdict and
+    # the proposal text (for the R1.8 set-diversity check at the end).
+    # The diversity check is a Phase 2 *set* property; it cannot be
+    # applied per-proposal because a single combinational hypothesis is
+    # not a failure on its own — only a set of one mode is.
+    per_proposal_stage1: list[tuple[Path, str, dict]] = []  # (path, text, h_res)
+    proposal_files = sorted(proposals_path.glob("*.md"))
+    for file_path in proposal_files:
+        text = file_path.read_text(encoding="utf-8")
+        h_res = evaluator.evaluate_heuristics(text)
+        per_proposal_stage1.append((file_path, text, h_res))
+
+    # R1.8 — Compute the set-level diversity verdict ONCE, then attach
+    # it to every proposal's trace so the patch-suggestion loop and the
+    # downstream merge_patches.py see it. The set diversity is a
+    # property of the brainstorm run, not of any individual candidate.
+    all_texts = [t for _, t, _ in per_proposal_stage1]
+    diversity = evaluator.evaluate_set_diversity(all_texts)
+    if not diversity["passed"]:
+        print(
+            f"\n[R1.8 set-diversity] {diversity['reasons'][0]}"
+        )
+    else:
+        print(
+            f"\n[R1.8 set-diversity] {len(all_texts)} candidate(s) "
+            f"cover {len(diversity['modes_seen'])} distinct inference "
+            f"modes: {diversity['modes_seen']}."
+        )
+
     success_pool = []
     failure_pool = []
 
     print(f"[*] Starting evaluation of proposals in: {proposals_path}")
-    for file_path in sorted(proposals_path.glob("*.md")):
+    for file_path, text, h_res in per_proposal_stage1:
         print(f"\nAnalyzing {file_path.name}...")
-        text = file_path.read_text(encoding="utf-8")
 
-        # Stage 1: Heuristic Check
-        h_res = evaluator.evaluate_heuristics(text)
+        # Stage 1: Heuristic Check (already done in the first pass).
+        # The R1.8 set-diversity verdict is attached to the trace even
+        # on proposals that pass Stage 1 — a single combinational
+        # candidate is fine in isolation, but the *set* is not.
+        r18_set_failure = (
+            "r1_8_set_diversity" if not diversity["passed"] else "r1_8_set_ok"
+        )
 
         if not h_res["passed"]:
             print(f" -> [FAILED Stage 1] Heuristic issues: {h_res['reasons']}")
@@ -407,6 +581,8 @@ def main():
                 "critique": react_res["critique"],
                 "suggested_patch": react_res["suggested_patch"],
                 "turns_used": react_res["turns_used"],
+                "r1_8_set_status": r18_set_failure,
+                "r1_8_modes_seen": diversity["modes_seen"],
             })
             continue
 
@@ -443,6 +619,11 @@ def main():
             "rigorous": error_result["passed"],
             "turns_used": error_result["turns_used"],
             "patch_valid": error_result.get("patch_valid", False),
+            # R1.8 set-diversity verdict (a property of the brainstorm
+            # run, attached to every candidate's trace for downstream
+            # consumers that read the JSON).
+            "r1_8_set_status": r18_set_failure,
+            "r1_8_modes_seen": diversity["modes_seen"],
             # Aliases for backward compatibility with older trace readers:
             "error_critique": error_result["critique"],
             "error_suggested_patch": error_result["suggested_patch"],

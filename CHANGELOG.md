@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### scientific-brainstormer v1.1.0 — R1.2 + R1.4 + R1.8 (originality discipline)
+
+- **R1.2 — Lipton loveliness scoring in Phase 3 pruning.** Each surviving candidate is now scored on Lipton's four explanatory virtues (scope / mechanism / unification / simplicity, each W/M/S). A Loveliness score of three or four W's is *below threshold* and the candidate is pruned. Templates/HYPOTHESIS.md gains a Section 5 with the scoring format. Per IdeaBench (Guo et al. 2024), candidates that score high on novelty but low on feasibility are flagged for revision rather than auto-pruned.
+- **R1.4 — Inference-mode labeling in Phase 2.** Every candidate now declares its inference mode (abduction / induction / analogy) in Section 6 of HYPOTHESIS.md. Single-mode candidate sets are a Phase 2 failure — the under-explored conceptual space trap is now grep-detectable.
+- **R1.8 — Boden-type diversity check.** A fourth failure mode is added to `references/failure_modes.md`: *under-explored conceptual space* — a candidate set in which every hypothesis is the same Boden type (typically all combinational). The agent is required to attempt ≥ 2 distinct inference modes / Boden types per Phase 2 run.
+- **evaluate_ideas.py heuristic extensions** — Stage 1 now verifies (a) the Loveliness field is present and above threshold, (b) the inference-mode field is present and in the allowed vocabulary, (c) the candidate set covers ≥ 2 distinct modes. Three new tests in `tests/test_evaluate_ideas.py`.
+
 ## [3.6.8] - 2026-05-03
 
 > **Naming note**: this release ships the **v3.6.6 generator-evaluator contract**

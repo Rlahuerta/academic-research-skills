@@ -40,3 +40,6 @@ Peer assessment literature (Topping, 1998; Liu & Carless, 2006) establishes that
   - Mitigation: Pilot rubric with 3 physics faculty and iterate before main study.
 * **Limitation:** Peer feedback quality varies with reviewer ability.
   - Mitigation: Measure and report reviewer FCI scores as a covariate in secondary analysis.
+
+Loveliness: (scope=M, mechanism=S, unification=M, simplicity=M)
+Inference Mode: abduction

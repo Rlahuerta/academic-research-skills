@@ -1,22 +1,17 @@
 [
   {
-    "file": "/home/rilah/Repositories/academic-research-skills/scientific-brainstormer/tests/golden_set/proposal_bad_correlation_causation.md",
-    "stage": "heuristic",
-    "heuristic_reasons": [
-      "Potential violation of failure mode: 'correlation' detected."
-    ],
-    "critique": "litellm not available \u2014 mock response",
-    "suggested_patch": "{\"file\": \"SKILL.md\", \"op\": \"insert_after\", \"target_section\": \"## 2. CRITICAL WARNINGS\", \"content\": \"\\n### Mock Rule (litellm unavailable)\\n- This is a placeholder patch generated without LLM access.\", \"diagnosis\": \"litellm not available \\u2014 mock response\", \"rigorous\": false}",
-    "turns_used": 1
-  },
-  {
-    "file": "/home/rilah/Repositories/academic-research-skills/scientific-brainstormer/tests/golden_set/proposal_bad_infeasible_instruments.md",
+    "file": "/tmp/claude-1000/tmpq4ina57_/proposal_0.md",
     "stage": "react",
     "critique": "litellm not available \u2014 mock response",
     "suggested_patch": "{\"file\": \"SKILL.md\", \"op\": \"insert_after\", \"target_section\": \"## 2. CRITICAL WARNINGS\", \"content\": \"\\n### Mock Rule (litellm unavailable)\\n- This is a placeholder patch generated without LLM access.\", \"diagnosis\": \"litellm not available \\u2014 mock response\", \"rigorous\": false}",
     "rigorous": false,
     "turns_used": 1,
     "patch_valid": true,
+    "r1_8_set_status": "r1_8_set_ok",
+    "r1_8_modes_seen": [
+      "abduction",
+      "induction"
+    ],
     "error_critique": "litellm not available \u2014 mock response",
     "error_suggested_patch": "{\"file\": \"SKILL.md\", \"op\": \"insert_after\", \"target_section\": \"## 2. CRITICAL WARNINGS\", \"content\": \"\\n### Mock Rule (litellm unavailable)\\n- This is a placeholder patch generated without LLM access.\", \"diagnosis\": \"litellm not available \\u2014 mock response\", \"rigorous\": false}",
     "error_turns_used": 1,
@@ -27,13 +22,40 @@
     "success_patch_valid": true
   },
   {
-    "file": "/home/rilah/Repositories/academic-research-skills/scientific-brainstormer/tests/golden_set/proposal_good_peer_feedback.md",
+    "file": "/tmp/claude-1000/tmpq4ina57_/proposal_1.md",
     "stage": "react",
     "critique": "litellm not available \u2014 mock response",
     "suggested_patch": "{\"file\": \"SKILL.md\", \"op\": \"insert_after\", \"target_section\": \"## 2. CRITICAL WARNINGS\", \"content\": \"\\n### Mock Rule (litellm unavailable)\\n- This is a placeholder patch generated without LLM access.\", \"diagnosis\": \"litellm not available \\u2014 mock response\", \"rigorous\": false}",
     "rigorous": false,
     "turns_used": 1,
     "patch_valid": true,
+    "r1_8_set_status": "r1_8_set_ok",
+    "r1_8_modes_seen": [
+      "abduction",
+      "induction"
+    ],
+    "error_critique": "litellm not available \u2014 mock response",
+    "error_suggested_patch": "{\"file\": \"SKILL.md\", \"op\": \"insert_after\", \"target_section\": \"## 2. CRITICAL WARNINGS\", \"content\": \"\\n### Mock Rule (litellm unavailable)\\n- This is a placeholder patch generated without LLM access.\", \"diagnosis\": \"litellm not available \\u2014 mock response\", \"rigorous\": false}",
+    "error_turns_used": 1,
+    "error_patch_valid": true,
+    "success_critique": "litellm not available \u2014 mock response",
+    "success_suggested_patch": "{\"file\": \"SKILL.md\", \"op\": \"insert_after\", \"target_section\": \"## 2. CRITICAL WARNINGS\", \"content\": \"\\n### Mock Rule (litellm unavailable)\\n- This is a placeholder patch generated without LLM access.\", \"diagnosis\": \"litellm not available \\u2014 mock response\", \"rigorous\": false}",
+    "success_turns_used": 1,
+    "success_patch_valid": true
+  },
+  {
+    "file": "/tmp/claude-1000/tmpq4ina57_/proposal_2.md",
+    "stage": "react",
+    "critique": "litellm not available \u2014 mock response",
+    "suggested_patch": "{\"file\": \"SKILL.md\", \"op\": \"insert_after\", \"target_section\": \"## 2. CRITICAL WARNINGS\", \"content\": \"\\n### Mock Rule (litellm unavailable)\\n- This is a placeholder patch generated without LLM access.\", \"diagnosis\": \"litellm not available \\u2014 mock response\", \"rigorous\": false}",
+    "rigorous": false,
+    "turns_used": 1,
+    "patch_valid": true,
+    "r1_8_set_status": "r1_8_set_ok",
+    "r1_8_modes_seen": [
+      "abduction",
+      "induction"
+    ],
     "error_critique": "litellm not available \u2014 mock response",
     "error_suggested_patch": "{\"file\": \"SKILL.md\", \"op\": \"insert_after\", \"target_section\": \"## 2. CRITICAL WARNINGS\", \"content\": \"\\n### Mock Rule (litellm unavailable)\\n- This is a placeholder patch generated without LLM access.\", \"diagnosis\": \"litellm not available \\u2014 mock response\", \"rigorous\": false}",
     "error_turns_used": 1,

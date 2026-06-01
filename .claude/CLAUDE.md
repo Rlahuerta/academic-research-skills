@@ -64,7 +64,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 | Skill | Purpose | Key Modes |
 |-------|---------|-----------|
-| `scientific-brainstormer` v1.0.0 | Scientific hypothesis ideation with Trace2Skill self-evolution | brainstorm (4-phase: divergence → synthesis → pruning → operationalization) |
+| `scientific-brainstormer` v1.1.0 | Scientific hypothesis ideation with Trace2Skill self-evolution | brainstorm (4-phase: divergence → synthesis → pruning → operationalization; v1.1 adds Lipton loveliness, inference-mode labels, Boden-type diversity) |
 | `deep-research` v2.9.3 | 13-agent research team | full, quick, socratic, review, lit-review, fact-check, systematic-review |
 | `academic-paper` v3.1.1 | 12-agent paper writing | full, plan, outline-only, revision, revision-coach, abstract-only, lit-review, format-convert, citation-check, disclosure |
 | `academic-abstract` v1.0.0 | Structured abstract generation with 6-component quality gates | abstract-only (Background, Gap, Objective, Method, Key Findings, Implications) |
