@@ -169,6 +169,56 @@ Consuming agents should validate input and request re-generation if schema viola
 | `sources_b` | list[string] | Source IDs supporting position B |
 | `evidence_balance` | string | Analysis of which position has stronger evidence and why |
 
+### Optional Fields (v3.7+ Creative Process Discipline)
+
+The following fields are **optional** and only present on Theme objects
+produced by a `synthesis_agent` running with the v3.7+ discipline
+(Csikszentmihalyi 5-stage process + Toulmin 6-component claim structure +
+Lipton 4-dimension loveliness rubric). See
+`deep-research/agents/synthesis_agent.md` §"Creative Process Discipline
+(v3.7+)". Pre-v3.7+ synthesis outputs are valid Schema 3 instances
+without these fields; `report_compiler_agent` MUST tolerate their
+absence.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `toulmin_claims` | list[ToulminClaim] | Per non-trivial integrative claim, the 6 Toulmin components. |
+| `loveliness_scores` | list[LovelinessScore] | Per non-trivial claim, the Lipton 4-dimension score. Same length as `toulmin_claims` (1:1 pairing). |
+| `rejected_candidates` | list[RejectedCandidate] | Insight-stage candidates rejected at Evaluation stage, with the loveliness score that triggered rejection. |
+
+#### ToulminClaim Object (v3.7+)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `claim_id` | string | Stable identifier, e.g., `"Theme1.C1"`. Used for cross-referencing the Loveliness score. |
+| `claim` | string | Single-sentence integrative proposition. |
+| `data` | list[string] | Source IDs whose evidence supports the claim. |
+| `warrant` | string | Inferential principle connecting Data to Claim. |
+| `backing` | string | Theoretical or methodological source licensing the warrant. |
+| `qualifier` | string | Scope of generalization (population, context, time window). Required; absence is an overclaim. |
+| `rebuttal` | string | Conditions under which the claim would not hold. Required; absence is an overclaim. |
+
+#### LovelinessScore Object (v3.7+)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `scope` | enum | `W` / `M` / `S` (Lipton explanatory virtue: does the claim explain more than competitors?) |
+| `mechanism` | enum | `W` / `M` / `S` (is there a plausible causal chain?) |
+| `unification` | enum | `W` / `M` / `S` (does it connect to other well-established findings?) |
+| `simplicity` | enum | `W` / `M` / `S` (more parsimonious than competitors?) |
+
+A score with three or four `W` values is **below threshold** and the
+corresponding Toulmin claim is not eligible for the synthesis narrative
+(per `synthesis_agent.md` §"Lipton's loveliness rubric").
+
+#### RejectedCandidate Object (v3.7+)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `claim_summary` | string | Brief description of the Insight-stage candidate. |
+| `rejection_reason` | string | Why the candidate failed (e.g., "below threshold on 3 of 4 loveliness dimensions"). |
+| `loveliness_score` | LovelinessScore | The 4-dimension score that triggered the rejection. |
+
 ### Example
 
 ```markdown

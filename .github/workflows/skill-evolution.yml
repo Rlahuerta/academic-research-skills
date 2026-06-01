@@ -97,7 +97,7 @@ jobs:
           fi
 
       - name: Create Pull Request with evolved skill changes
-        if: steps.check_changes.outputs.changed == 'true'
+        if: steps.check_changes.outputs.changed == 'true' && github.event_name != 'push'
         uses: peter-evans/create-pull-request@v6
         with:
           commit-message: "feat(scientific-brainstormer): automated skill evolution from golden set evaluation"

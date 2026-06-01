@@ -12,7 +12,6 @@ agent that can read files, verify its own corrections, and iterate before
 committing a patch.
 """
 
-import os
 import sys
 import json
 import re
@@ -25,49 +24,71 @@ except ImportError:
     print("[Warning] 'litellm' is not installed. LLM-based verification will fall back to mock evaluation.", file=sys.stderr)
     completion = None
 
+# Shared helpers (single source of truth for Markdown structural validation
+# and path-traversal containment).
+from _markdown_validation import validate_markdown_content
+from _safe_path import safe_resolve_under
+
+
 # ---------------------------------------------------------------------------
-# Shared Markdown validator (same logic as merge_patches.py)
+# Mock-patch fallback builder
 # ---------------------------------------------------------------------------
 
-def validate_markdown_content(content: str) -> tuple:
-    """Returns (is_valid: bool, errors: list[str])."""
-    errors = []
+def _make_fallback_patch(content: str, diagnosis: str) -> str:
+    """Build a JSON patch string for the no-LLM-available and LLM-error paths.
 
-    backtick_fences = [m for m in re.finditer(r'^```', content, re.MULTILINE)]
-    if len(backtick_fences) % 2 != 0:
-        errors.append("Unbalanced triple-backtick code fences")
+    Centralizes the sentinel-patch construction that was previously
+    duplicated at three sites in _call_llm / evaluate.
+    """
+    return json.dumps({
+        "file": "SKILL.md",
+        "op": "insert_after",
+        "target_section": "## 2. CRITICAL WARNINGS",
+        "content": content,
+        "diagnosis": diagnosis,
+        "rigorous": False,
+    })
 
-    # Check for nested/unclosed fences
-    in_fence = False
-    for i, line in enumerate(content.split('\n')):
-        stripped = line.strip()
-        if stripped.startswith('```'):
-            if in_fence:
-                # Already inside a fence — this is a closing fence (or a nested one)
-                if stripped == '```' or re.match(r'^```\s*$', stripped):
-                    in_fence = False  # legitimate closing fence
-                else:
-                    # ```something while already in fence = nested (invalid)
-                    errors.append(f"Nested code fence near line {i + 1}: '{stripped[:40]}'")
-            else:
-                in_fence = True   # opening fence
-    if in_fence:
-        errors.append("Unclosed code fence at end of content")
 
-    # Headers need "# " not "#text"
-    for m in re.finditer(r'^#{1,6}[^#\s]', content, re.MULTILINE):
-        errors.append(f"Malformed header (missing space after #): '{m.group()[:40]}'")
+# ---------------------------------------------------------------------------
+# Balanced-brace JSON extractor (replaces brace-restrictive regex)
+# ---------------------------------------------------------------------------
 
-    if not content.strip():
-        errors.append("Content is empty or whitespace-only")
+def _extract_first_json_object(text: str) -> dict | None:
+    """Find the first balanced top-level {...} in `text` and return its dict.
 
-    stripped = content.strip()
-    if (stripped.startswith('{') and stripped.endswith('}')) or \
-       (stripped.startswith('[') and stripped.endswith(']')):
-        if not re.search(r'^(#{1,6}\s|\* |\- |\d+\. )', content, re.MULTILINE):
-            errors.append("Content appears to be raw JSON/data without markdown structure")
-
-    return (len(errors) == 0, errors)
+    Replaces the previous regex `\\{[^{}]*"file"\\s*:\\s*"[^"]*"[^{}]*\\}`
+    which forbade any nested braces (rejecting any patch whose `content`
+    field contained a JSON example or curly-brace code block).
+    """
+    depth = 0
+    in_string = False
+    escape = False
+    start = -1
+    for i, ch in enumerate(text):
+        if escape:
+            escape = False
+            continue
+        if in_string and ch == '\\':
+            escape = True
+            continue
+        if ch == '"':
+            in_string = not in_string
+            continue
+        if in_string:
+            continue
+        if ch == '{':
+            if depth == 0:
+                start = i
+            depth += 1
+        elif ch == '}':
+            depth -= 1
+            if depth == 0 and start >= 0:
+                try:
+                    return json.loads(text[start:i + 1])
+                except json.JSONDecodeError:
+                    return None
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -102,11 +123,8 @@ class ReActAnalyst:
         """Read a file from the skill directory, with caching."""
         if relative_path in self._file_cache:
             return self._file_cache[relative_path]
-        filepath = (self.skill_dir / relative_path).resolve()
-        try:
-            if not filepath.is_relative_to(self.skill_dir.resolve()):
-                return f"[ACCESS DENIED: {relative_path}]"
-        except (ValueError, OSError):
+        filepath = safe_resolve_under(self.skill_dir, relative_path)
+        if filepath is None:
             return f"[ACCESS DENIED: {relative_path}]"
         if not filepath.exists():
             return f"[FILE NOT FOUND: {relative_path}]"
@@ -171,14 +189,10 @@ CRITICAL RULES:
     def _call_llm(self, messages: list[dict]) -> str:
         """Call the LLM and return the response text."""
         if not completion:
-            return json.dumps({
-                "file": "SKILL.md",
-                "op": "insert_after",
-                "target_section": "## 2. CRITICAL WARNINGS",
-                "content": "\n### Mock Rule (litellm unavailable)\n- This is a placeholder patch generated without LLM access.",
-                "diagnosis": "litellm not available — mock response",
-                "rigorous": False,
-            })
+            return _make_fallback_patch(
+                "\n### Mock Rule (litellm unavailable)\n- This is a placeholder patch generated without LLM access.",
+                "litellm not available — mock response",
+            )
         try:
             response = completion(
                 model=self.MODEL,
@@ -186,14 +200,10 @@ CRITICAL RULES:
             )
             return response.choices[0].message.content
         except Exception as e:
-            return json.dumps({
-                "file": "SKILL.md",
-                "op": "insert_after",
-                "target_section": "## 2. CRITICAL WARNINGS",
-                "content": f"\n### Rule from Failed Evaluation\n- LLM call failed: {e}",
-                "diagnosis": f"LLM error: {e}",
-                "rigorous": False,
-            })
+            return _make_fallback_patch(
+                f"\n### Rule from Failed Evaluation\n- LLM call failed: {e}",
+                f"LLM error: {e}",
+            )
 
     def evaluate(self, proposal_text: str, proposal_path: str = "") -> dict:
         """
@@ -231,39 +241,34 @@ Start by reading SKILL.md and references/failure_modes.md to understand the expe
                     messages.append({"role": "user", "content": f"FILE CONTENT ({filepath}):\n\n{content[:3000]}\n\n[End of file preview. Continue your analysis.]"})
                 continue
 
-            # Try to extract JSON patch from response
-            json_match = re.search(r'\{[^{}]*"file"\s*:\s*"[^"]*"[^{}]*\}', response, re.DOTALL)
-            if json_match:
-                try:
-                    candidate = json.loads(json_match.group())
-                    # Self-verification: validate the patch content
-                    patch_content = candidate.get("content", "")
-                    is_valid, errors = validate_markdown_content(patch_content)
-                    if not is_valid:
-                        # Patch failed self-verification — feed back to agent
-                        messages.append({"role": "assistant", "content": response})
-                        messages.append({"role": "user", "content": f"Your patch failed Markdown validation:\n" + "\n".join(f"- {e}" for e in errors) + "\n\nPlease fix the patch and output the corrected JSON."})
-                        continue
+            # Try to extract a balanced JSON patch from the response.
+            # Uses a balanced-brace scanner (replaces the previous
+            # regex that forbade nested braces, which silently rejected
+            # any patch whose content field contained a JSON example
+            # or curly-brace code block).
+            candidate = _extract_first_json_object(response)
+            if candidate:
+                patch_content = candidate.get("content", "")
+                is_valid, errors = validate_markdown_content(patch_content)
+                if not is_valid:
+                    # Patch failed self-verification — feed back to agent
+                    messages.append({"role": "assistant", "content": response})
+                    messages.append({"role": "user", "content": f"Your patch failed Markdown validation:\n" + "\n".join(f"- {e}" for e in errors) + "\n\nPlease fix the patch and output the corrected JSON."})
+                    continue
 
-                    final_output = candidate
-                    break
-                except json.JSONDecodeError:
-                    pass
+                final_output = candidate
+                break
 
             # Response didn't contain a valid patch — add to history and continue
             messages.append({"role": "assistant", "content": response})
             messages.append({"role": "user", "content": "Continue your analysis. If ready, output the final JSON patch. If you need to read more files, use READ:<path>."})
 
         if final_output is None:
-            # Max turns exhausted — use the last response as best-effort
-            final_output = {
-                "file": "SKILL.md",
-                "op": "insert_after",
-                "target_section": "## 2. CRITICAL WARNINGS",
-                "content": "\n### Rule from Incomplete Analysis\n- ReAct loop did not converge within max turns.",
-                "diagnosis": "ReAct loop exhausted — analysis incomplete",
-                "rigorous": False,
-            }
+            # Max turns exhausted — use a placeholder fallback.
+            final_output = json.loads(_make_fallback_patch(
+                "\n### Rule from Incomplete Analysis\n- ReAct loop did not converge within max turns.",
+                "ReAct loop exhausted — analysis incomplete",
+            ))
 
         return {
             "passed": final_output.get("rigorous", False),
@@ -289,7 +294,10 @@ class IdeaEvaluator:
             return
 
         content = self.failure_modes_path.read_text().lower()
-        heuristics = ["sci-fi", "infinite budget", "uninvented", "correlation", "trendy tool"]
+        # Note: keep this list in sync with the verbatim phrases in
+        # references/failure_modes.md. Only add a heuristic after the
+        # corresponding phrase exists in that file.
+        heuristics = ["sci-fi", "infinite budget", "correlation", "trendy tool"]
         for word in heuristics:
             if word in content:
                 self.forbidden_keywords.append(word)
@@ -302,15 +310,27 @@ class IdeaEvaluator:
         # Check for structural completion
         # NOTE: These are prefix checks, not exact matches, to accommodate
         # template variants (e.g., "## 2. Background and Targeted Gap").
-        required_header_prefixes = [
-            "## 1. Title",
-            "## 2. Background",
-            "## 3. Methodology",
-            "## 4. Expected Limitations"
-        ]
-        for prefix in required_header_prefixes:
-            if not any(line.strip().lower().startswith(prefix.lower()) for line in proposal_text.split('\n')):
-                failures.append(f"Missing mandatory section: {prefix}")
+        # Both depths are accepted: '## ' (RESEARCH_PROPOSAL.md) and '### '
+        # (HYPOTHESIS.md). A proposal must have section "1", "2", "3", "4"
+        # at EITHER depth — not both. Proposals rendered from HYPOTHESIS.md
+        # would otherwise be wrongly rejected.
+        section_number_prefixes = ["1. ", "2. ", "3. ", "4. "]
+        header_prefixes = ["## ", "### "]
+        lines = proposal_text.split('\n')
+        present_sections: set[str] = set()
+        for line in lines:
+            stripped = line.strip().lower()
+            for hp in header_prefixes:
+                if not stripped.startswith(hp):
+                    continue
+                rest = stripped[len(hp):]
+                for sp in section_number_prefixes:
+                    if rest.startswith(sp):
+                        present_sections.add(sp)
+                        break
+        for sp in section_number_prefixes:
+            if sp not in present_sections:
+                failures.append(f"Missing mandatory section: heading starting with section number '{sp.strip()}'")
 
         # Check for banned concepts/phrases derived from failure_modes.md
         for kw in self.forbidden_keywords:
@@ -346,8 +366,16 @@ def main():
     args = parser.parse_args()
 
     skill_path = Path(args.skill_dir)
-    proposals_path = Path(args.proposals_dir)
+    proposals_path = Path(args.proposals_dir).resolve()
     failure_modes_file = skill_path / "references" / "failure_modes.md"
+
+    # Verify --proposals-dir is a real directory. Without this, the
+    # subsequent glob() would silently return [] and the operator would
+    # see an empty trace pool with no diagnostic.
+    if not proposals_path.is_dir():
+        parser.error(f"--proposals-dir does not exist or is not a directory: {proposals_path}")
+    if not proposals_path.is_relative_to(Path.cwd().resolve()):
+        print(f"[Warning] --proposals-dir resolves outside CWD: {proposals_path}")
 
     evaluator = IdeaEvaluator(failure_modes_file)
     error_analyst = ReActAnalyst(skill_path, role="error_analyst")
@@ -408,6 +436,14 @@ def main():
 
         result_entry = {
             "file": str(file_path),
+            "stage": "react",
+            # Canonical fields (used by merge_patches.py):
+            "critique": error_result["critique"],
+            "suggested_patch": error_result["suggested_patch"],
+            "rigorous": error_result["passed"],
+            "turns_used": error_result["turns_used"],
+            "patch_valid": error_result.get("patch_valid", False),
+            # Aliases for backward compatibility with older trace readers:
             "error_critique": error_result["critique"],
             "error_suggested_patch": error_result["suggested_patch"],
             "error_turns_used": error_result["turns_used"],

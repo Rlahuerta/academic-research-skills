@@ -25,6 +25,15 @@ _spec.loader.exec_module(_evaluate_ideas)
 IdeaEvaluator = _evaluate_ideas.IdeaEvaluator
 validate_markdown_content = _evaluate_ideas.validate_markdown_content
 
+# Also import the shared validator directly to verify the
+# evaluate_ideas.py wrapper is just a re-export (no drift).
+_md_spec = importlib.util.spec_from_file_location(
+    "_markdown_validation", _scripts_dir + "/_markdown_validation.py"
+)
+_md_mod = importlib.util.module_from_spec(_md_spec)
+_md_spec.loader.exec_module(_md_mod)
+validate_markdown_content_shared = _md_mod.validate_markdown_content
+
 
 GOLDEN_SET_DIR = Path(__file__).parent / "golden_set"
 SKILL_DIR = Path(__file__).parent.parent
@@ -134,6 +143,43 @@ class TestHeaderPrefixMatching(unittest.TestCase):
                 any(line.strip().lower().startswith(prefix.lower()) for line in template_text.split('\n')),
                 f"Template missing expected header prefix: {prefix}"
             )
+
+    def test_hypothesis_template_headers_match(self):
+        """HYPOTHESIS.md uses ### h3 headers; heuristic must accept them."""
+        template_text = (SKILL_DIR / "templates" / "HYPOTHESIS.md").read_text()
+        result = self.evaluator.evaluate_heuristics(template_text)
+        self.assertTrue(
+            result["passed"],
+            f"HYPOTHESIS.md (h3 headers) should pass heuristics but failed: {result['reasons']}"
+        )
+
+    def test_shared_validator_matches_reexport(self):
+        """evaluate_ideas.py and _markdown_validation.py must use the same function.
+
+        The two imports go through different importlib module instances,
+        so `assertIs` is too strict. We verify the source text matches,
+        which is what would actually drift if someone re-introduced a
+        duplicate copy in evaluate_ideas.py.
+        """
+        import inspect
+        src_eval = inspect.getsource(validate_markdown_content)
+        src_shared = inspect.getsource(validate_markdown_content_shared)
+        self.assertEqual(src_eval, src_shared,
+                         "evaluate_ideas.validate_markdown_content and "
+                         "_markdown_validation.validate_markdown_content "
+                         "have diverged -- re-extract the shared implementation.")
+
+    def test_no_uninvented_keyword(self):
+        """The dead 'uninvented' heuristic should not be checked (regression A7)."""
+        # A proposal that mentions "uninvented" should NOT be flagged by the
+        # heuristic (the keyword was removed because it never appeared in
+        # failure_modes.md).
+        text = "# Title\n## 1. Foo\n## 2. Bar\n## 3. Baz\n## 4. Qux\nSome uninvented concept."
+        result = self.evaluator.evaluate_heuristics(text)
+        self.assertTrue(
+            result["passed"],
+            f"Proposal mentioning 'uninvented' should not be heuristically flagged: {result['reasons']}"
+        )
 
 
 class TestGoldenSetEndToEnd(unittest.TestCase):

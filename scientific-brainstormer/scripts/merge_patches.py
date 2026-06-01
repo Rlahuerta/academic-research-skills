@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import os
 import sys
 import json
 import re
@@ -12,56 +11,16 @@ try:
 except ImportError:
     completion = None
 
+# Shared helpers (single source of truth for path-traversal containment
+# and Markdown structural validation).
+from _safe_path import safe_resolve_under
+from _markdown_validation import validate_markdown_content
+
+
 class PatchConsolidator:
     def __init__(self, skill_dir: Path, batch_size: int = 4):
         self.skill_dir = skill_dir
         self.batch_size = batch_size
-
-    @staticmethod
-    def validate_markdown_content(content: str) -> tuple:
-        """
-        Validates that patch content is well-formed Markdown.
-        Returns (is_valid: bool, errors: list[str]).
-        """
-        errors = []
-
-        # 1. Check for unbalanced fenced code blocks
-        backtick_fences = [m for m in re.finditer(r'^```', content, re.MULTILINE)]
-        if len(backtick_fences) % 2 != 0:
-            errors.append("Unbalanced triple-backtick code fences (odd number of ``` markers)")
-
-        # 2. Check that fenced code blocks have matching open/close pairs
-        in_fence = False
-        for i, line in enumerate(content.split('\n')):
-            stripped = line.strip()
-            if stripped.startswith('```'):
-                if in_fence:
-                    if stripped == '```' or re.match(r'^```\s*$', stripped):
-                        in_fence = False  # legitimate closing fence
-                    else:
-                        errors.append(f"Nested code fence near line {i + 1}: '{stripped[:40]}'")
-                else:
-                    in_fence = True   # opening fence
-        if in_fence:
-            errors.append("Unclosed code fence at end of content")
-
-        # 3. Check headers have proper format: "# " not "#text"
-        for match in re.finditer(r'^#{1,6}[^#\s]', content, re.MULTILINE):
-            errors.append(f"Malformed header (missing space after #): '{match.group()[:40]}'")
-
-        # 4. Reject empty or whitespace-only content
-        if not content.strip():
-            errors.append("Content is empty or whitespace-only")
-
-        # 5. Reject content that looks like raw JSON/structured data without markdown
-        stripped = content.strip()
-        if (stripped.startswith('{') and stripped.endswith('}')) or \
-           (stripped.startswith('[') and stripped.endswith(']')):
-            # Allow if there's at least one markdown header or list marker
-            if not re.search(r'^(#{1,6}\s|\* |\- |\d+\. )', content, re.MULTILINE):
-                errors.append("Content appears to be raw JSON/data without markdown structure")
-
-        return (len(errors) == 0, errors)
 
     def enforce_guardrails(self, patch: dict) -> bool:
         """
@@ -78,27 +37,23 @@ class PatchConsolidator:
             print(f"[-] Guardrail 1 Failed: Invalid patch schema. Missing keys: {missing}")
             return False
 
-        # Guardrail 2: Check if targeted file actually exists and stays within skill_dir
-        target_file = (self.skill_dir / patch["file"]).resolve()
-        try:
-            if not target_file.is_relative_to(self.skill_dir.resolve()):
-                print(f"[-] Guardrail 2 Failed: Target path escapes skill directory: '{patch['file']}'")
-                return False
-        except (ValueError, OSError):
-            print(f"[-] Guardrail 2 Failed: Invalid path: '{patch['file']}'")
+        # Guardrail 2: Check if targeted file is within skill_dir (containment)
+        target_file = safe_resolve_under(self.skill_dir, patch["file"])
+        if target_file is None:
+            print(f"[-] Guardrail 2 Failed: Target path escapes skill directory or is invalid: '{patch['file']}'")
             return False
         if not target_file.exists():
             print(f"[-] Guardrail 2 Failed: Target file '{patch['file']}' does not exist.")
             return False
 
         # Guardrail 3: Verify operation is structured safely
-        if patch["op"] not in ["insert_after", "replace", "append"]:
+        if patch["op"] not in ["insert_after", "append"]:
             print(f"[-] Guardrail 3 Failed: Unsupported op '{patch['op']}'.")
             return False
 
         # Guardrail 4: Markdown format validation
         content = patch.get("content", "")
-        is_valid, errors = self.validate_markdown_content(content)
+        is_valid, errors = validate_markdown_content(content)
         if not is_valid:
             for err in errors:
                 print(f"[-] Guardrail 4 Failed: {err}")
@@ -128,7 +83,7 @@ ORIGINAL SKILL FILE PARTIAL CONTENT:
 PROPOSED INDEPENDENT PATCHES:
 {patches_str}
 
-Consolidate these edits. Reconcile any overlaps, retain unique insights, and maintain concise structure. 
+Consolidate these edits. Reconcile any overlaps, retain unique insights, and maintain concise structure.
 Output your final consolidated modification in JSON format with these exact keys:
 - "file": "SKILL.md"
 - "op": "insert_after"
@@ -164,6 +119,8 @@ Output your final consolidated modification in JSON format with these exact keys
         num_batches = math.ceil(len(patches) / self.batch_size)
         print(f"[*] Hierarchical Merge Level: Processing {len(patches)} patches in {num_batches} batches...")
 
+        # Read SKILL.md once per merge run (was previously re-read on every
+        # recursion level, see B1-equivalent efficiency finding).
         parent_file = self.skill_dir / "SKILL.md"
         parent_content = parent_file.read_text() if parent_file.exists() else ""
 
@@ -184,7 +141,7 @@ Output your final consolidated modification in JSON format with these exact keys
         Guardrails:
         - Deduplication: skip if the exact same content already exists in the file.
         - Markdown validation: re-validate after consolidation before writing.
-        - Safe insertion: insert after the target section heading with proper spacing.
+        - Safe insertion: insert after the target section's body (not inside it).
         """
         if not consolidated_patch:
             print("[!] No valid patch to apply.")
@@ -192,20 +149,17 @@ Output your final consolidated modification in JSON format with these exact keys
 
         # Post-consolidation Markdown validation before writing
         insert_text = consolidated_patch.get("content", "")
-        is_valid, errors = self.validate_markdown_content(insert_text)
+        is_valid, errors = validate_markdown_content(insert_text)
         if not is_valid:
             print(f"[!] Refusing to apply patch: Markdown validation failed after consolidation.")
             for err in errors:
                 print(f"    - {err}")
             return
 
-        target_filepath = (self.skill_dir / consolidated_patch["file"]).resolve()
-        try:
-            if not target_filepath.is_relative_to(self.skill_dir.resolve()):
-                print(f"[!] Refusing to apply patch: Target path escapes skill directory.")
-                return
-        except (ValueError, OSError):
-            print(f"[!] Refusing to apply patch: Invalid path.")
+        # Containment check: target path must resolve under skill_dir
+        target_filepath = safe_resolve_under(self.skill_dir, consolidated_patch["file"])
+        if target_filepath is None:
+            print("[!] Refusing to apply patch: Target path escapes skill directory or is invalid.")
             return
         content = target_filepath.read_text()
 
@@ -217,26 +171,84 @@ Output your final consolidated modification in JSON format with these exact keys
             print(f"[*] Deduplication: patch content already present in {target_filepath.name}. Skipping insertion.")
             return
 
-        # Safe insertion: find the section at line-start to avoid matching inside code blocks (BUG-5 fix)
-        escaped = re.escape(target_section)
-        match = re.search(rf'^(.*{escaped})\s*\n', content, re.MULTILINE)
+        # Safe insertion: find the byte offset just AFTER the target section's
+        # body (i.e., at the start of the next sibling heading or EOF).
+        # Never matches inside ``` fenced code blocks.
+        # (BUG-5 fix: previous regex inserted AT the header line, displacing
+        # the section's original first body content.)
+        insert_pos = _find_section_anchor(content, target_section)
 
-        if match:
-            insert_pos = match.end()
-            # Ensure proper spacing: blank line before inserted content if needed
+        if insert_pos is not None:
+            # Ensure proper spacing: blank line before inserted content.
             prefix = content[:insert_pos]
             suffix = content[insert_pos:]
-            # Add a newline before insert_text if the preceding char isn't already a newline
-            separator = "\n\n" if not prefix.endswith("\n\n") else ""
-            if prefix.endswith("\n") and not prefix.endswith("\n\n"):
-                separator = "\n"
-            updated_content = prefix + separator + insert_text + suffix
+            # Trim trailing whitespace from prefix, then add exactly one
+            # blank line before the new block.
+            prefix = prefix.rstrip() + "\n\n"
+            updated_content = prefix + insert_text.rstrip() + "\n\n" + suffix.lstrip("\n")
             target_filepath.write_text(updated_content)
             print(f"[+] Successfully integrated final patch into {target_filepath.name}!")
         else:
             # Fallback append if section is missing
             print(f"[Warning] Could not find section '{target_section}'. Appending to end.")
-            target_filepath.write_text(content + "\n\n" + insert_text)
+            target_filepath.write_text(content.rstrip() + "\n\n" + insert_text.rstrip() + "\n")
+
+
+def _find_section_anchor(content: str, target_section: str) -> int | None:
+    """Return the byte offset where a new section can be safely inserted AFTER
+    the body of `target_section` (i.e., at the start of the next sibling
+    heading or end of file, whichever comes first). Returns None if the
+    target section cannot be found outside a code fence.
+
+    Skips matches inside ``` fenced code blocks so that example sections
+    in prose do not corrupt the file.
+    """
+    escaped = re.escape(target_section)
+    lines = content.split('\n')
+    in_fence = False
+    section_start_line: int | None = None
+    for i, line in enumerate(lines):
+        stripped = line.lstrip()
+        if stripped.startswith('```'):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        if section_start_line is None:
+            # Anchor on a line whose stripped form equals target_section exactly
+            # (optionally followed by trailing whitespace).
+            if re.match(rf'^{escaped}\s*$', stripped):
+                section_start_line = i
+            continue
+        # We're inside the target section; stop at the next sibling heading.
+        if re.match(r'^#{1,6}\s', line):
+            offset = sum(len(l) + 1 for l in lines[:i])
+            return offset
+    if section_start_line is None:
+        return None
+    # Section runs to EOF.
+    return len(content)
+
+
+def _derive_fallback_target(skill_dir: Path, trace_file: str) -> str:
+    """Derive a safe skill_dir-relative target for a free-form-text patch
+    fallback. Uses the trace's originating file (set by evaluate_ideas.py
+    to the proposal path) so the patch lands in the right place, but
+    falls back to SKILL.md if the trace file is outside skill_dir.
+
+    The enforce_guardrails containment check in the caller will reject
+    any escape attempt regardless.
+    """
+    if not trace_file:
+        return "SKILL.md"
+    try:
+        candidate = Path(trace_file).resolve()
+        if candidate.is_relative_to(skill_dir.resolve()):
+            return str(candidate.relative_to(skill_dir.resolve()))
+    except (ValueError, OSError):
+        pass
+    return "SKILL.md"
+
 
 def main():
     parser = argparse.ArgumentParser(description="Consolidate and merge proposed skill patches (Trace2Skill Stage 3)")
@@ -255,23 +267,42 @@ def main():
     with open(failure_traces_file, "r") as f:
         traces = json.load(f)
 
-    # 1. Gather all raw patches from failure analyses (or success trajectories)
+    # 1. Gather all raw patches from failure analyses (or success trajectories).
+    # Accept the canonical "suggested_patch" key (added in evaluate_ideas.py
+    # for new runs) and the legacy "error_suggested_patch" /
+    # "success_suggested_patch" keys for older trace files. This fixes the
+    # silent no-op where every Stage-2 patch was dropped (A1).
     raw_patches = []
     for trace in traces:
-        patch_candidate = trace.get("suggested_patch")
-        if patch_candidate:
+        patch_candidate = (
+            trace.get("suggested_patch")
+            or trace.get("error_suggested_patch")
+            or trace.get("success_suggested_patch")
+        )
+        if not patch_candidate:
+            # No patch at all in this trace - skip with a warning so the
+            # operator can see the data shape.
+            print(f"[-] No patch in trace {trace.get('file')}; skipping.")
+            continue
+        if isinstance(patch_candidate, str):
             try:
-                # Expecting raw trace patches to be stored or formatted as parseable JSON strings
-                parsed = json.loads(patch_candidate) if isinstance(patch_candidate, str) else patch_candidate
+                parsed = json.loads(patch_candidate)
                 raw_patches.append(parsed)
-            except Exception:
-                # If it isn't raw JSON, package the plain text as an insert_after block
+                continue
+            except json.JSONDecodeError:
+                # Plain-text fallback: package against the trace's
+                # originating file, not always SKILL.md. The
+                # enforce_guardrails containment check catches escape.
+                rel_target = _derive_fallback_target(skill_path, trace.get("file", ""))
                 raw_patches.append({
-                    "file": "SKILL.md",
+                    "file": rel_target,
                     "op": "insert_after",
                     "target_section": "## 2. CRITICAL WARNINGS",
                     "content": f"\n### Rule from Failure Trace\n- {patch_candidate}"
                 })
+                continue
+        # Already a dict (the canonical shape from evaluate_ideas.py).
+        raw_patches.append(patch_candidate)
 
     # 2. Programmatically filter out entries failing physical and structural guardrails
     consolidator = PatchConsolidator(skill_path, args.batch_size)
