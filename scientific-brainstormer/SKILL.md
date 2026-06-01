@@ -61,7 +61,9 @@ To brainstorm and design a scientific proposal, execute the following four phase
 
 ## 2. CRITICAL WARNINGS
 
-### CRITICAL WARNING: The Feasibility Fallacy
+
+### Rule from Failed Evaluation
+- LLM call failed: litellm.InternalServerError: InternalServerError: OpenAIException - Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.### CRITICAL WARNING: The Feasibility Fallacy
 Never propose hypotheses that rely on uninvented tools, infinite compute budgets, or inaccessible datasets. Every proposed concept must include an "Operationalization" section detailing how it can be tested with current technology.
 
 ### CRITICAL WARNING: Incrementalism and Redundancy
