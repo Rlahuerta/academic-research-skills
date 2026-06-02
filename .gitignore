@@ -13,3 +13,7 @@ __pycache__/
 
 # Private ROADMAP lives in claude-memory-sync (花花/roadmaps/), not this public repo
 ROADMAP.md
+
+# revbib/ holds review-bibliography PDFs read for context, not source
+# artefacts of the repo. Keep them out of git.
+revbib/*.pdf
