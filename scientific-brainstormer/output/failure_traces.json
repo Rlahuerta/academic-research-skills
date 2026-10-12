@@ -1,67 +1,63 @@
 [
   {
-    "file": "/tmp/claude-1000/tmpq4ina57_/proposal_0.md",
+    "file": "/home/runner/work/academic-research-skills/academic-research-skills/scientific-brainstormer/tests/golden_set/proposal_bad_correlation_causation.md",
+    "stage": "heuristic",
+    "heuristic_reasons": [
+      "Potential violation of failure mode: 'correlation' detected."
+    ],
+    "critique": "LLM error: litellm.InternalServerError: InternalServerError: OpenAIException - Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.",
+    "suggested_patch": "{\"file\": \"SKILL.md\", \"op\": \"insert_after\", \"target_section\": \"## 2. CRITICAL WARNINGS\", \"content\": \"\\n### Rule from Failed Evaluation\\n- LLM call failed: litellm.InternalServerError: InternalServerError: OpenAIException - Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.\", \"diagnosis\": \"LLM error: litellm.InternalServerError: InternalServerError: OpenAIException - Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.\", \"rigorous\": false}",
+    "turns_used": 1,
+    "r1_8_set_status": "r1_8_set_ok",
+    "r1_8_modes_seen": [
+      "abduction",
+      "analogy",
+      "induction"
+    ]
+  },
+  {
+    "file": "/home/runner/work/academic-research-skills/academic-research-skills/scientific-brainstormer/tests/golden_set/proposal_bad_infeasible_instruments.md",
     "stage": "react",
-    "critique": "litellm not available \u2014 mock response",
-    "suggested_patch": "{\"file\": \"SKILL.md\", \"op\": \"insert_after\", \"target_section\": \"## 2. CRITICAL WARNINGS\", \"content\": \"\\n### Mock Rule (litellm unavailable)\\n- This is a placeholder patch generated without LLM access.\", \"diagnosis\": \"litellm not available \\u2014 mock response\", \"rigorous\": false}",
+    "critique": "LLM error: litellm.InternalServerError: InternalServerError: OpenAIException - Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.",
+    "suggested_patch": "{\"file\": \"SKILL.md\", \"op\": \"insert_after\", \"target_section\": \"## 2. CRITICAL WARNINGS\", \"content\": \"\\n### Rule from Failed Evaluation\\n- LLM call failed: litellm.InternalServerError: InternalServerError: OpenAIException - Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.\", \"diagnosis\": \"LLM error: litellm.InternalServerError: InternalServerError: OpenAIException - Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.\", \"rigorous\": false}",
     "rigorous": false,
     "turns_used": 1,
     "patch_valid": true,
     "r1_8_set_status": "r1_8_set_ok",
     "r1_8_modes_seen": [
       "abduction",
+      "analogy",
       "induction"
     ],
-    "error_critique": "litellm not available \u2014 mock response",
-    "error_suggested_patch": "{\"file\": \"SKILL.md\", \"op\": \"insert_after\", \"target_section\": \"## 2. CRITICAL WARNINGS\", \"content\": \"\\n### Mock Rule (litellm unavailable)\\n- This is a placeholder patch generated without LLM access.\", \"diagnosis\": \"litellm not available \\u2014 mock response\", \"rigorous\": false}",
+    "error_critique": "LLM error: litellm.InternalServerError: InternalServerError: OpenAIException - Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.",
+    "error_suggested_patch": "{\"file\": \"SKILL.md\", \"op\": \"insert_after\", \"target_section\": \"## 2. CRITICAL WARNINGS\", \"content\": \"\\n### Rule from Failed Evaluation\\n- LLM call failed: litellm.InternalServerError: InternalServerError: OpenAIException - Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.\", \"diagnosis\": \"LLM error: litellm.InternalServerError: InternalServerError: OpenAIException - Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.\", \"rigorous\": false}",
     "error_turns_used": 1,
     "error_patch_valid": true,
-    "success_critique": "litellm not available \u2014 mock response",
-    "success_suggested_patch": "{\"file\": \"SKILL.md\", \"op\": \"insert_after\", \"target_section\": \"## 2. CRITICAL WARNINGS\", \"content\": \"\\n### Mock Rule (litellm unavailable)\\n- This is a placeholder patch generated without LLM access.\", \"diagnosis\": \"litellm not available \\u2014 mock response\", \"rigorous\": false}",
+    "success_critique": "LLM error: litellm.InternalServerError: InternalServerError: OpenAIException - Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.",
+    "success_suggested_patch": "{\"file\": \"SKILL.md\", \"op\": \"insert_after\", \"target_section\": \"## 2. CRITICAL WARNINGS\", \"content\": \"\\n### Rule from Failed Evaluation\\n- LLM call failed: litellm.InternalServerError: InternalServerError: OpenAIException - Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.\", \"diagnosis\": \"LLM error: litellm.InternalServerError: InternalServerError: OpenAIException - Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.\", \"rigorous\": false}",
     "success_turns_used": 1,
     "success_patch_valid": true
   },
   {
-    "file": "/tmp/claude-1000/tmpq4ina57_/proposal_1.md",
+    "file": "/home/runner/work/academic-research-skills/academic-research-skills/scientific-brainstormer/tests/golden_set/proposal_good_peer_feedback.md",
     "stage": "react",
-    "critique": "litellm not available \u2014 mock response",
-    "suggested_patch": "{\"file\": \"SKILL.md\", \"op\": \"insert_after\", \"target_section\": \"## 2. CRITICAL WARNINGS\", \"content\": \"\\n### Mock Rule (litellm unavailable)\\n- This is a placeholder patch generated without LLM access.\", \"diagnosis\": \"litellm not available \\u2014 mock response\", \"rigorous\": false}",
+    "critique": "LLM error: litellm.InternalServerError: InternalServerError: OpenAIException - Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.",
+    "suggested_patch": "{\"file\": \"SKILL.md\", \"op\": \"insert_after\", \"target_section\": \"## 2. CRITICAL WARNINGS\", \"content\": \"\\n### Rule from Failed Evaluation\\n- LLM call failed: litellm.InternalServerError: InternalServerError: OpenAIException - Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.\", \"diagnosis\": \"LLM error: litellm.InternalServerError: InternalServerError: OpenAIException - Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.\", \"rigorous\": false}",
     "rigorous": false,
     "turns_used": 1,
     "patch_valid": true,
     "r1_8_set_status": "r1_8_set_ok",
     "r1_8_modes_seen": [
       "abduction",
+      "analogy",
       "induction"
     ],
-    "error_critique": "litellm not available \u2014 mock response",
-    "error_suggested_patch": "{\"file\": \"SKILL.md\", \"op\": \"insert_after\", \"target_section\": \"## 2. CRITICAL WARNINGS\", \"content\": \"\\n### Mock Rule (litellm unavailable)\\n- This is a placeholder patch generated without LLM access.\", \"diagnosis\": \"litellm not available \\u2014 mock response\", \"rigorous\": false}",
+    "error_critique": "LLM error: litellm.InternalServerError: InternalServerError: OpenAIException - Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.",
+    "error_suggested_patch": "{\"file\": \"SKILL.md\", \"op\": \"insert_after\", \"target_section\": \"## 2. CRITICAL WARNINGS\", \"content\": \"\\n### Rule from Failed Evaluation\\n- LLM call failed: litellm.InternalServerError: InternalServerError: OpenAIException - Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.\", \"diagnosis\": \"LLM error: litellm.InternalServerError: InternalServerError: OpenAIException - Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.\", \"rigorous\": false}",
     "error_turns_used": 1,
     "error_patch_valid": true,
-    "success_critique": "litellm not available \u2014 mock response",
-    "success_suggested_patch": "{\"file\": \"SKILL.md\", \"op\": \"insert_after\", \"target_section\": \"## 2. CRITICAL WARNINGS\", \"content\": \"\\n### Mock Rule (litellm unavailable)\\n- This is a placeholder patch generated without LLM access.\", \"diagnosis\": \"litellm not available \\u2014 mock response\", \"rigorous\": false}",
-    "success_turns_used": 1,
-    "success_patch_valid": true
-  },
-  {
-    "file": "/tmp/claude-1000/tmpq4ina57_/proposal_2.md",
-    "stage": "react",
-    "critique": "litellm not available \u2014 mock response",
-    "suggested_patch": "{\"file\": \"SKILL.md\", \"op\": \"insert_after\", \"target_section\": \"## 2. CRITICAL WARNINGS\", \"content\": \"\\n### Mock Rule (litellm unavailable)\\n- This is a placeholder patch generated without LLM access.\", \"diagnosis\": \"litellm not available \\u2014 mock response\", \"rigorous\": false}",
-    "rigorous": false,
-    "turns_used": 1,
-    "patch_valid": true,
-    "r1_8_set_status": "r1_8_set_ok",
-    "r1_8_modes_seen": [
-      "abduction",
-      "induction"
-    ],
-    "error_critique": "litellm not available \u2014 mock response",
-    "error_suggested_patch": "{\"file\": \"SKILL.md\", \"op\": \"insert_after\", \"target_section\": \"## 2. CRITICAL WARNINGS\", \"content\": \"\\n### Mock Rule (litellm unavailable)\\n- This is a placeholder patch generated without LLM access.\", \"diagnosis\": \"litellm not available \\u2014 mock response\", \"rigorous\": false}",
-    "error_turns_used": 1,
-    "error_patch_valid": true,
-    "success_critique": "litellm not available \u2014 mock response",
-    "success_suggested_patch": "{\"file\": \"SKILL.md\", \"op\": \"insert_after\", \"target_section\": \"## 2. CRITICAL WARNINGS\", \"content\": \"\\n### Mock Rule (litellm unavailable)\\n- This is a placeholder patch generated without LLM access.\", \"diagnosis\": \"litellm not available \\u2014 mock response\", \"rigorous\": false}",
+    "success_critique": "LLM error: litellm.InternalServerError: InternalServerError: OpenAIException - Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.",
+    "success_suggested_patch": "{\"file\": \"SKILL.md\", \"op\": \"insert_after\", \"target_section\": \"## 2. CRITICAL WARNINGS\", \"content\": \"\\n### Rule from Failed Evaluation\\n- LLM call failed: litellm.InternalServerError: InternalServerError: OpenAIException - Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.\", \"diagnosis\": \"LLM error: litellm.InternalServerError: InternalServerError: OpenAIException - Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.\", \"rigorous\": false}",
     "success_turns_used": 1,
     "success_patch_valid": true
   }
